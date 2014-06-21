@@ -16,9 +16,11 @@ You should set up a folder named `R` at the directory where you want to install 
 ![installR01](http://i.imgbox.com/IRTRIvg5.jpg "Choose directory to install R")
 
 Choose according to you PC operation system.
+
 ![installR02](http://i.imgbox.com/fo9YGrzg.jpg "Choose according to you PC system")
 
 If you install it successfully, you open R and will see this:
+
 ![installR03](http://i.imgbox.com/5aw3DW4B.jpg "R windows") 
 
 ### Install Rstudio Desktop
@@ -28,6 +30,7 @@ Choose directory to install Rstudio.
 ![installRstudion1](http://i.imgbox.com/exN40Tst.jpg "Choose directory to install Rstudio")
 
 Open Rstudio you will see this.
+
 ![installRstudion2](http://i.imgbox.com/W5BWO12s.jpg "Rstudio Interface")
 
 
