@@ -2,7 +2,7 @@
 
 WISE R CLUB, Xiaojun Sun, 2014.06.20
 
-R is a language and environment for statistical computing and graphics. It is widely used around the world. Here I briefly describe the steps to install and upgrade R for R beginners. This post is written for Windows user. If you use Mac, please search Google for instruction. 
+R is a language and environment for statistical computing and graphics. It is widely used around the world. Here I briefly describe the steps to install and upgrade R for R beginners. This post is written for Windows user. If you use Mac, please search Google for instruction. If you have already installed R on your computer, you can jump to step two.
 
 ## Step 1: Install R and Rstudio
 The latest version of R can be download from [CRAN][2]. Rstudio Desktop can be download from it's [official site][3]. 
@@ -35,7 +35,7 @@ Open Rstudio you will see this.
 
 
 ## Step 2: Upgrade R
-Now we set up the global library for R. More details about this is described in [Tal Galili's blog post][1].
+Now we set up the global library for R. More details about this is described in [Tal Galili's blog post][1]. Although you are using the latest version of R, you can still follow my steps. It will help you set a global library for R. This will prevent some troubles in the future.
 
 Open your R. Run `chooseMirror()` command line(Type it and hit `ENTER`) .Choose `China(Xiamen)`.
 
