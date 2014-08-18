@@ -1,0 +1,91 @@
+---
+title: "The Solution to Assignment 1"
+author: "Xiaojun Sun"
+date: "Sunday, June 29, 2014"
+output:
+  html_document:
+    theme: united
+---
+
+Dear all WISE R Club members. This is the solution to our first assignment. I hope you guys be more familiar with R after reading the book and finishing assignment 1. 
+
+```{r initial, echo=FALSE}
+setwd("E:/RSpace/R Club/assignment1")
+```
+
+### Question 1
+First of all, we load 
+```{r loaddata,cache=TRUE}
+grades <- read.table("grades.txt", header=TRUE,stringsAsFactors=FALSE)
+# `stringsAsFactors=FALSE` prevent the `read.table` function from treating the character name as factor
+# `grades` is a data frame
+```
+
+After creating the dataframe you can see what's in it using the following functions.
+
+```{r detail}
+head(grades)
+str(grades)
+```
+
+
+### Question 2
+We plot the histogram of the grade of math.
+```{r hist,fig.width=8,fig.cap="The histgram of math grade"}
+hist(grades$Math,col="lightblue",main="The histogram of the grade of math",xlab="The grade of math")
+```
+
+### Question 3
+Now we plot the scatterplot of `Math vs. Chinese` and `Math vs. English` in one long graph.
+```{r xyplot, fig.width=8, fig.height=12,fig.cap="The Scatterplots"}
+opar <- par(no.readonly=TRUE)
+par(mfcol=c(2,1))
+par(lwd=1.5)
+attach(grades)
+plot(Math,Chinese,col="red",main="Scatterplot of Math vs. Chinese")
+abline(lm(Math~Chinese))
+plot(Math,English,col="blue",main="Scatterplot of Math vs. English")
+abline(lm(Math~English))
+detach(grades)
+par(opar)
+```
+
+### Question 4
+To see how many students have passed this exam.
+```{r passexam}
+pass <- subset(grades,Math>=60 & Chinese>=60 & English>=60, select=name)
+dim(pass)[1]
+```
+
+So in total `r dim(pass)[1]` students have passed the exam.
+
+### Question 5
+To find the out the standing student.
+```{r outstanding}
+outstand <- subset(grades,Math>=90 & Chinese>=90 & English>=90, select=name)
+outstand
+```
+
+So the headmaster should award `r outstand`. Congratulations!
+
+### Note
+The solution is not unique.
+
+Someone told me that Chinese characters cann't display normally in R. I have to say R is friendly enough to Chinese character. If there is something wrong when you try to display Chinese character, it's highly probably that you made a mistakes when loading the data, that is, you didn't specify `stringsAsFactors=FALSE`.
+
+To display that R is friendly enough to Chinese character I can give you an example. 
+
+```{r chinese}
+变量1 <- 2
+变量2 <- 3
+变量1+变量2
+变量1*变量2
+```
+
+As you see, the Chinese characters can even be the variable name. How amazing is it!
+
+If you have more questions about this solution, you can send an email to me or ask me in the next meeting.
+
+Thank you!
+
+__The end__.
