@@ -1,7 +1,7 @@
 Read Me
 ===========
 
-WISE R Club is a group established by some master students at WISE，Xiamen University.
+WISE R Club is a study group established by some master students at WISE, XMU.
 
 This repository is set up for publishing tutorials and assignments.
 
