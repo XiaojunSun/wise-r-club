@@ -1,0 +1,291 @@
+---
+title: "R Project 1 Solution"
+author: "Xiaojun Sun"
+date: "Tuesday, July 29, 2014"
+output:
+  html_document:
+    fig_height: 7
+    fig_width: 9
+    highlight: pygments
+    keep_md: yes
+    theme: readable
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+setwd("E:/RSpace/R Club/project1")
+options(digits = 4)
+knitr::opts_chunk$set(cache=TRUE,fig.align="center", message=FALSE)
+```
+
+## Quiz
+
+### apply
+"apply" returns a vector or array or list of values obtained by applying a function to margins of an array or matrix.
+```{r apply}
+(m = matrix(1:6, nrow = 2))
+apply(m, 1, sum)
+```
+
+### lapply
+"lapply" returns a list of the same length as X, each element of which is the result of applying FUN to the corresponding element of X.
+```{r lapply}
+lapply(1:5, sqrt)
+```
+
+
+### sapply
+"sapply" is a user-friendly version of lapply by default returning a vector or matrix if appropriate.
+```{r}
+sapply(1:5, sqrt)
+```
+
+
+### vapply
+"vapply" is similar to sapply, but has a pre-specified type of return value, so it can be safer (and sometimes faster) to use.
+```{r vapply}
+vapply(1:5, sqrt, 1i)
+```
+
+### rapply
+"rapply" is a recursive version of lapply.
+```{r rapply}
+(x = list(A = list(a=pi, b=list(b1=1)), B = "a character string"))
+rapply(x, sqrt, classes = "numeric", how = "unlist")
+rapply(x, sqrt, classes = "numeric", how = "replace")
+rapply(x, sqrt, classes = "numeric", how = "list")
+```
+
+
+### mapply
+"mapply" is a multivariate version of sapply. mapply applies FUN to the first elements of each ... argument, the second elements, the third elements, and so on. Arguments are recycled if necessary.
+```{r mapply}
+mapply(rep, LETTERS[1:3], 1:3)
+```
+
+See also [lapply, sapply, vapply, mapply, rapply](http://people.stern.nyu.edu/ylin/r_apply_family.html) and [R Grouping functions: sapply vs. lapply vs. apply. vs. tapply vs. by vs. aggregate](http://stackoverflow.com/questions/3505701/r-grouping-functions-sapply-vs-lapply-vs-apply-vs-tapply-vs-by-vs-aggrega).
+
+**********************
+
+## Project 1
+
+### Question 1
+Decompose the pollution series of Beijing into trend, seasonal, and random noise components. Does its air pollution go worse all the time?
+
+```{r Beijing,cache=F,fig.align='center',fig.cap="The decomposition of Beijing air pollution time series"}
+load("air-quality.RData")
+head(df)
+tail(df)
+bj <- subset(df,City=="Beijing",select=c(Date,Pollution))
+day <- as.POSIXlt(x = "2000-6-5", origin="2000-1-1")$yday
+bjts <- ts(bj$Pollution,start=c(2000,day),freq=365.25)
+plot(decompose(bjts))
+```
+
+The air quality of Beijing doesn't go worse all the time.
+In fact, as you can see from the trend component of it's pollution time series, the air quality of Beijing keeps improving all the time.
+
+### Question 2
+Which province has the worst air pollution? Which has the best air quality? (Build your own standard and use data to support your argument)
+
+Here I provided a simple standard to sort the air quality of all these cities. My sandard is the average air pollution index of the entire sample period for all the cities. One thing that I need to remind you is the sample periods for the cities are quite different. So it seems impossible to calculate the average air pollution index for all the cities on the same time domain.
+
+```{r sortAir}
+meanPol <- aggregate(df[,3], by=list(city=df$City), FUN = mean)
+sortPol <- meanPol[order(meanPol$x, decreasing = T),]
+colnames(sortPol) <- c("City", "Pollution")
+head(sortPol)
+tail(sortPol)
+sc <- sortPol$City
+```
+
+We find that `r as.character(sc[1])` has the worst airquality, while `r as.character(sc[length(sc)])` has the best air quality.
+
+### Question 3
+Decompose the time series for each city into stochastic trend, seasonal, and random noise components. From the trend data, what is the ratio of cities enjoying better air qualities than 10 years ago? What about those suﬀering from worse air quality than 10 years ago?
+
+If the stochastic trend component of the pollution series has a positive time trend, then I say it enjoys better air qualities than 10 years ago. Otherwise, it suﬀers from worse air quality than 10 years ago.
+
+```{r airTrend,warning=FALSE}
+library(plyr)
+library(doParallel)
+cl <- makeCluster(detectCores()) #Parallel computing
+clusterCall(cl, function() {
+    fr <<- 365.25  # On average every year has 365.25 days
+})
+registerDoParallel(cl)
+plut.coe <- ddply(.data = df,.variables = "City",.parallel = T, .fun = function(dt){
+    dts <- ts(dt$Pollution, freq = fr)
+    if(length(dts) >= 2*fr){
+        trend <- na.omit(decompose(dts)$trend)
+        coe <- lm(trend~time(trend))$coefficients[2]
+    }else{
+        coe <- NA 
+    }
+    return(coe)
+})
+# I remove the cities that have observations less than 2 years.
+stopCluster(cl)
+colnames(plut.coe)<-c("City", "coefficient")
+str(plut.coe)
+na.city <- as.character(plut.coe[is.na(plut.coe$coefficient),1])
+sort.coe <- plut.coe[order(plut.coe$coefficient, na.last = NA, decreasing = T),]
+## the cities that I ignored
+na.city 
+head(sort.coe);tail(sort.coe)
+better <- subset(sort.coe, coefficient<0, select=c(City, coefficient))
+## the cities that enjoy better air quality
+print(as.character(better$City), quote=F, justify = c("left")) 
+worse <- subset(sort.coe, coefficient>0, select=c(City, coefficient))
+## the cities that suffer from worse air quality
+print(as.character(worse$City), quote=F, justify = c("left")) 
+```
+
+Since it will report error that "time series has no or less than 2 periods". It counts year as period. So I have to remove the cities that have observations less than 2 years.
+
+There are `r length(better$City)` cities enjoy better air quality than before, while `r length(worse$City)` cities suffer from worse air quality.
+
+### Question 4
+Is the stochastic trend of the air pollution predictable? (Use data and model to support your argument)
+
+Taking Beijing as an example, we get the stochastic trend of its pollution series first.
+
+```{r trend_plot,cache=FALSE}
+## the trend series of Beijing with NAs
+bj_trend <- na.omit(decompose(bjts)$trend) 
+plot(bj_trend, main="The stochastic trend of Beijing air pollution series")
+```
+
+We can see from the graph that the stochastic trend is not stationary. This could be confirmed by run the following tests.
+```{r urtest,warning=FALSE}
+library(tseries)
+ur_test <- function(ts){
+    cat("The p-value of Augmented Dickey–Fuller Test is", adf.test(ts)$p.value,"\n")
+    cat("The p-value of Phillips–Perron Unit Root Test is", pp.test(ts)$p.value,"\n")
+    cat("The p-value of KPSS Test for Stationarity is", kpss.test(ts)$p.value)
+}
+
+cat("The unit root tests on the stochastic trend of Beijing air pollution series:")
+ur_test(bj_trend)
+```
+
+So the stochastic trend is not stationary. Next I plot the ACF and PACF of this stochastic trend.
+```{r acf2,cache=FALSE}
+require(astsa)
+x <- acf2(bj_trend, max.lag = 50) 
+```
+
+You can judge from the graph that the stochastic trend of Beijing air pollution series seems like I(1). We then fit it to AR(1)
+
+```{r ar1}
+(bj_fit <- arima(bj_trend, order=c(1,0,0)))
+```
+
+As you can see, the coefficient (`r bj_fit$coef[1]`) is quite close to one. So the stochastic trend of Beijing air pollution series is random walk. So we can conclude that the stochastic trend is **not** predictable.
+
+### Question 5
+Are there any city whose stochastic trend of air pollution is comoving with that of Beijing? (hint: use cointegration tests to ﬁnd out)
+
+First of all, I find the overlapping period of each city with Beijing.
+Then I get two time series with the common and continuous date. I decompose the two series to get two stochastic trends and I test they are cointegrated. I have to remove some cities for two reasons: it has observations less than two periods(years), or its overlaping period with Beijing is less than two periods(years).
+
+```{r coint.funs}
+## cointegration test function
+cointest<-function(regdata){
+    fitxy<-lm(y~x+0,data = regdata ,na.action = na.omit)
+    pvalue <- (adf.test(fitxy$residuals))$p.value
+    ifelse(pvalue<=0.05, 1, 0)
+}
+
+## function to get the continuous date observations
+continu <- function(xx){
+    xx[,1] <- as.Date(xx[,1],format="%m/%d/%Y")
+    srt <- xx[order(xx$Date, decreasing = F),]
+    n<- dim(srt)[1]-1
+    for(i in 1:n){
+        diff.day <- as.numeric(srt$Date[i+1]-srt$Date[i])
+        if(diff.day>1){
+            srt[i,] <- NA
+        }else{
+            next
+        }
+    }
+    srt <- na.omit(srt)
+    return(srt)
+}
+
+## function to generate a data frame with two time series
+getts <- function(ctn){
+    dst = ctn[1,1]
+    year <- as.numeric(format(dst,"%Y"))
+    ori<-paste(year,"-1-1",sep="")
+    day <- as.POSIXlt(dst, format="%m/%d/%Y",origin=ori)$yday
+    y.ts<-ts(ctn[,2], start=c(year,day), freq=fr)
+    x.ts<-ts(ctn[,3], start=c(year,day), freq=fr)
+    dts <- data.frame(y=y.ts, x=x.ts)
+    return(dts)
+}
+
+## workhorse function
+test <- function(dt){
+    xx <- merge(bj, dt, by="Date")
+    TF <- nrow(xx)>2*fr
+    if(TF){
+        ctn <- continu(xx)
+        dts <- getts(ctn)
+        TF <- !is.null(nrow(dts)) & nrow(dts) > 2*fr
+        if(TF){
+            x <- na.omit(decompose(dts$x)$trend)
+            y <- na.omit(decompose(dts$y)$trend)
+            inter <- na.omit(ts.union(y, x,dframe=TRUE))
+            TF <- !is.null(nrow(inter)) & nrow(inter) > 20
+            if(TF){
+                regdata <- inter
+            }else{
+                regdata <- fake
+            }
+            TF <- !is.null(nrow(regdata)) & nrow(regdata) > 20
+            result <- ifelse(TF, cointest(regdata), NA)
+        }else{
+            result <- NA
+        }
+    }else{
+        result <- NA
+    }
+    result
+}
+```
+
+Then I run the test. In the test outcomes, `1` is for `Cointegration`, `0` is for `Not Cointegration`, `NA` is for `Not Available`,  
+```{r runtests, warning=FALSE}
+fr <- 365.25
+df5 <- df[df["City"]!="Beijing",]
+fake <- matrix(1:4,c(2,2))
+#Parallel computing
+cl <- makeCluster(detectCores()) 
+clusterCall(cl, function() {
+    library(tseries)
+})
+clusterExport(cl,c("fr","bj","continu","test","getts","cointest"))
+registerDoParallel(cl)
+test.res <- ddply(.data = df5,.variables = "City",.parallel = T, .fun = function(dt){
+    test(dt)
+})
+stopCluster(cl)
+colnames(test.res)<-c("City", "Coint")
+head(test.res)
+```
+
+```{r outcome}
+(resNA <- sum(is.na(test.res["Coint"])))
+test.res <- na.omit(test.res)
+(res0 <- sum(test.res["Coint"]==0))
+(res1 <- sum(test.res["Coint"]==1))
+```
+
+So we can see that `r resNA` cities are excluded from the tests for not enough observations, `r res0` cities are **not** comoving with Beijing and `r res1` city is comoving with Beijing. So the answer to this question is `NO`.
+
+
+<p>&nbsp;</p>
+*****************
+<p></a><a href="http://xiaojunsun.github.io/wise-r-club/">WISE R Club</a> project is proudly maintained by <a href="https://github.com/XiaojunSun">XiaojunSun</a>.</p>
