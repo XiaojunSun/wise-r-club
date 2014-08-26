@@ -102,9 +102,9 @@ sc <- sortPol$City
 We find that `r as.character(sc[1])` has the worst airquality, while `r as.character(sc[length(sc)])` has the best air quality.
 
 ### Question 3
-Decompose the time series for each city into stochastic trend, seasonal, and random noise components. From the trend data, what is the ratio of cities enjoying better air qualities than 10 years ago? What about those suﬀering from worse air quality than 10 years ago?
+Decompose the time series for each city into stochastic trend, seasonal, and random noise components. From the trend data, what is the ratio of cities enjoying better air qualities than 10 years ago? What about those suffering from worse air quality than 10 years ago?
 
-If the stochastic trend component of the pollution series has a positive time trend, then I say it enjoys better air qualities than 10 years ago. Otherwise, it suﬀers from worse air quality than 10 years ago.
+If the stochastic trend component of the pollution series has a positive time trend, then I say it enjoys better air qualities than 10 years ago. Otherwise, it suffers from worse air quality than 10 years ago.
 
 ```{r airTrend,warning=FALSE}
 library(plyr)
@@ -130,14 +130,14 @@ colnames(plut.coe)<-c("City", "coefficient")
 str(plut.coe)
 na.city <- as.character(plut.coe[is.na(plut.coe$coefficient),1])
 sort.coe <- plut.coe[order(plut.coe$coefficient, na.last = NA, decreasing = T),]
-## the cities that I ignored
+# the cities that I ignored
 na.city 
 head(sort.coe);tail(sort.coe)
 better <- subset(sort.coe, coefficient<0, select=c(City, coefficient))
-## the cities that enjoy better air quality
+# the cities that enjoy better air quality
 print(as.character(better$City), quote=F, justify = c("left")) 
 worse <- subset(sort.coe, coefficient>0, select=c(City, coefficient))
-## the cities that suffer from worse air quality
+# the cities that suffer from worse air quality
 print(as.character(worse$City), quote=F, justify = c("left")) 
 ```
 
@@ -151,7 +151,7 @@ Is the stochastic trend of the air pollution predictable? (Use data and model to
 Taking Beijing as an example, we get the stochastic trend of its pollution series first.
 
 ```{r trend_plot,cache=FALSE}
-## the trend series of Beijing with NAs
+# the trend series of Beijing with NAs
 bj_trend <- na.omit(decompose(bjts)$trend) 
 plot(bj_trend, main="The stochastic trend of Beijing air pollution series")
 ```
@@ -160,8 +160,8 @@ We can see from the graph that the stochastic trend is not stationary. This coul
 ```{r urtest,warning=FALSE}
 library(tseries)
 ur_test <- function(ts){
-    cat("The p-value of Augmented Dickey–Fuller Test is", adf.test(ts)$p.value,"\n")
-    cat("The p-value of Phillips–Perron Unit Root Test is", pp.test(ts)$p.value,"\n")
+    cat("The p-value of Augmented Dickey???Fuller Test is", adf.test(ts)$p.value,"\n")
+    cat("The p-value of Phillips???Perron Unit Root Test is", pp.test(ts)$p.value,"\n")
     cat("The p-value of KPSS Test for Stationarity is", kpss.test(ts)$p.value)
 }
 
@@ -184,20 +184,20 @@ You can judge from the graph that the stochastic trend of Beijing air pollution 
 As you can see, the coefficient (`r bj_fit$coef[1]`) is quite close to one. So the stochastic trend of Beijing air pollution series is random walk. So we can conclude that the stochastic trend is **not** predictable.
 
 ### Question 5
-Are there any city whose stochastic trend of air pollution is comoving with that of Beijing? (hint: use cointegration tests to ﬁnd out)
+Are there any city whose stochastic trend of air pollution is comoving with that of Beijing? (hint: use cointegration tests to find out)
 
 First of all, I find the overlapping period of each city with Beijing.
 Then I get two time series with the common and continuous date. I decompose the two series to get two stochastic trends and I test they are cointegrated. I have to remove some cities for two reasons: it has observations less than two periods(years), or its overlaping period with Beijing is less than two periods(years).
 
 ```{r coint.funs}
-## cointegration test function
+# cointegration test function
 cointest<-function(regdata){
     fitxy<-lm(y~x+0,data = regdata ,na.action = na.omit)
     pvalue <- (adf.test(fitxy$residuals))$p.value
     ifelse(pvalue<=0.05, 1, 0)
 }
 
-## function to get the continuous date observations
+# function to get the continuous date observations
 continu <- function(xx){
     xx[,1] <- as.Date(xx[,1],format="%m/%d/%Y")
     srt <- xx[order(xx$Date, decreasing = F),]
@@ -214,7 +214,7 @@ continu <- function(xx){
     return(srt)
 }
 
-## function to generate a data frame with two time series
+# function to generate a data frame with two time series
 getts <- function(ctn){
     dst = ctn[1,1]
     year <- as.numeric(format(dst,"%Y"))
@@ -226,7 +226,7 @@ getts <- function(ctn){
     return(dts)
 }
 
-## workhorse function
+# workhorse function
 test <- function(dt){
     xx <- merge(bj, dt, by="Date")
     TF <- nrow(xx)>2*fr
@@ -261,7 +261,7 @@ Then I run the test. In the test outcomes, `1` is for `Cointegration`, `0` is fo
 fr <- 365.25
 df5 <- df[df["City"]!="Beijing",]
 fake <- matrix(1:4,c(2,2))
-#Parallel computing
+# Parallel computing
 cl <- makeCluster(detectCores()) 
 clusterCall(cl, function() {
     library(tseries)
