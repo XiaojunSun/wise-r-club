@@ -77,7 +77,7 @@ code > span.er { color: #ff0000; font-weight: bold; }
 </div>
 <div class="section level2">
 <h2>数据</h2>
-<p>学术讲座考勤原始样本数据由张文婷老师提供，我对其做了细微的改动，主要是将列标题从改为英文，将<code>xls</code>格式转换为<code>csv</code>格式。本文所使用数据的下载地址为：<a href="http://pan.baidu.com/s/1kToTsvt，">http://pan.baidu.com/s/1kToTsvt，</a> 密码：mzjd。有兴趣的同学可以复制本文的结果。</p>
+<p>学术讲座考勤原始样本数据由张文婷老师提供，我对其做了细微的改动，主要是将列标题改为英文，将<code>xls</code>格式转换为<code>csv</code>格式。本文所使用数据的下载地址为：<a href="http://pan.baidu.com/s/1kToTsvt">http://pan.baidu.com/s/1kToTsvt</a> ， 密码：mzjd。有兴趣的同学可以复制本文的结果。</p>
 </div>
 <div class="section level2">
 <h2>步骤</h2>
@@ -139,6 +139,7 @@ oridt$num &lt;-<span class="st"> </span><span class="kw">as.character</span>(ori
 <div class="section level3">
 <h3>数据处理</h3>
 <p>先进行数据清洗（data cleaning）,然后做数据筛选（data filter）。数据筛选有一个标准：讲座开始和结束之间的时间间隔不得少于30分钟。</p>
+<p>在所得到的结果中，<code>begin</code>指讲座开始前刷指纹的时间，<code>end</code>表示讲座结束后刷指纹的时间。<code>NA</code>表示没有刷指纹。</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># 数据清洗</span>
 oridt2 &lt;-<span class="st"> </span>oridt %&gt;&gt;%
 <span class="st">    </span><span class="kw">gather</span>(type, time, begin_1:end_3, <span class="dt">na.rm=</span><span class="ot">TRUE</span>)%&gt;&gt;%
