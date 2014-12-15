@@ -137,29 +137,28 @@ dat &lt;-<span class="st"> </span>dat[-<span class="kw">which</span>(<span class
 <div class="section level3">
 <h3>生成时间数据</h3>
 <pre class="sourceCode r"><code class="sourceCode r">pars_t &lt;-<span class="st"> </span>function(x){<span class="kw">paste</span>(dat[,<span class="st">&quot;date&quot;</span>], x, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>)%&gt;&gt;%
-<span class="st">            </span><span class="kw">parse_date_time</span>(<span class="st">&quot;%Y%m%d %H%M%S&quot;</span>, <span class="dt">truncated =</span> <span class="dv">2</span>, <span class="dt">quiet =</span> <span class="ot">TRUE</span>)}</code></pre>
+<span class="st">            </span><span class="kw">parse_date_time</span>(<span class="st">&quot;%Y%m%d %H%M%S&quot;</span>, <span class="dt">truncated =</span> <span class="dv">2</span>, <span class="dt">quiet =</span> <span class="ot">TRUE</span>)}
+
+tcli&lt;-<span class="kw">grep</span>(<span class="st">&quot;^X&quot;</span>,<span class="kw">names</span>(dat))
+
+tcl&lt;-<span class="kw">llply</span>(dat[,tcli], pars_t)%&gt;&gt;%
+<span class="st">    </span>as.data.frame</code></pre>
 </div>
 <div class="section level3">
 <h3>数据变换</h3>
 <p>对每一行计算有效考勤次数。</p>
-<p>这部分对Liu Xi 的方法有较大的改进，<em>具体的改进之处容我有空再详叙</em>。</p>
-<pre class="sourceCode r"><code class="sourceCode r">tcli&lt;-<span class="kw">grep</span>(<span class="st">&quot;^X&quot;</span>,<span class="kw">names</span>(dat))
-
-tcl&lt;-<span class="kw">llply</span>(dat[,tcli], pars_t)%&gt;&gt;%
-<span class="st">    </span>as.data.frame
-
-dift &lt;-<span class="st"> </span>tcl[,<span class="dv">2</span>:<span class="kw">length</span>(tcli)]-tcl[,<span class="dv">1</span>:(<span class="kw">length</span>(tcli)-<span class="dv">1</span>)]
-logi &lt;-<span class="st"> </span>dift &gt;<span class="st"> </span><span class="dv">30</span>
+<pre class="sourceCode r"><code class="sourceCode r">dift &lt;-<span class="st"> </span>tcl[,<span class="dv">2</span>:<span class="kw">length</span>(tcli)]-tcl[,<span class="dv">1</span>:(<span class="kw">length</span>(tcli)-<span class="dv">1</span>)]
+logi &lt;-<span class="st"> </span>dift &gt;<span class="st"> </span><span class="kw">as.period</span>(<span class="dv">30</span>, <span class="st">&quot;minuts&quot;</span>)
 
 times &lt;-<span class="st"> </span><span class="kw">adply</span>(logi, <span class="dv">1</span>, function(x){
     a &lt;-<span class="st"> </span><span class="kw">which</span>(x==<span class="ot">TRUE</span>)
-    tms &lt;-<span class="st"> </span><span class="kw">ifelse</span>(<span class="kw">length</span>(a)==<span class="dv">1</span>,<span class="kw">length</span>(a),<span class="kw">ceiling</span>(logi/<span class="dv">2</span>))
+    tms &lt;-<span class="st"> </span><span class="kw">ifelse</span>(<span class="kw">length</span>(a)==<span class="dv">1</span>,<span class="kw">length</span>(a),<span class="kw">ceiling</span>(<span class="kw">sum</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)/<span class="dv">2</span>)) <span class="co"># 这是我的方法与Liu Xi的唯一的不同</span>
     <span class="kw">ifelse</span>(<span class="kw">is.na</span>(tms), <span class="dv">0</span>, tms)
 })
 <span class="kw">str</span>(times)</code></pre>
 <pre><code>## 'data.frame':    2146 obs. of  2 variables:
 ##  $ X1: Factor w/ 2146 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 2 3 4 5 6 7 8 9 10 ...
-##  $ V1: num  0 1 1 1 0 0 1 1 0 1 ...</code></pre>
+##  $ V1: num  0 1 1 1 2 0 1 1 0 1 ...</code></pre>
 </div>
 <div class="section level3">
 <h3>汇总结果</h3>
@@ -187,41 +186,41 @@ results &lt;-dat[,-tcli] %&gt;&gt;%
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">27720090153637</td>
-<td align="left">王霞</td>
-<td align="left">16</td>
-</tr>
-<tr class="even">
-<td align="left">27720091152428</td>
-<td align="left">韩峰</td>
-<td align="left">16</td>
-</tr>
-<tr class="odd">
-<td align="left">27720091152435</td>
-<td align="left">张扬</td>
-<td align="left">16</td>
-</tr>
-<tr class="even">
-<td align="left">27720101152640</td>
-<td align="left">可钦锋</td>
-<td align="left">16</td>
-</tr>
-<tr class="odd">
 <td align="left">27720090153641</td>
 <td align="left">李云森</td>
-<td align="left">15</td>
+<td align="left">20</td>
 </tr>
 <tr class="even">
-<td align="left">27720091152426</td>
-<td align="left">朱艳丽</td>
-<td align="left">15</td>
+<td align="left">27720091152398</td>
+<td align="left">储丽娅</td>
+<td align="left">20</td>
+</tr>
+<tr class="odd">
+<td align="left">27720091152423</td>
+<td align="left">张志远</td>
+<td align="left">20</td>
+</tr>
+<tr class="even">
+<td align="left">27720091152435</td>
+<td align="left">张扬</td>
+<td align="left">20</td>
+</tr>
+<tr class="odd">
+<td align="left">103840105640253</td>
+<td align="left">翁明明</td>
+<td align="left">19</td>
+</tr>
+<tr class="even">
+<td align="left">27720091152439</td>
+<td align="left">杨进</td>
+<td align="left">19</td>
 </tr>
 </tbody>
 </table>
 <p>我们还可以看一看那些同学刷讲座的次数是在2次以下的，需要提醒他们赶紧多去听讲座刷指纹。</p>
 <pre class="sourceCode r"><code class="sourceCode r">warm &lt;-<span class="st"> </span>results %&gt;&gt;%
 <span class="st">    </span><span class="kw">filter</span>(times &lt;<span class="st"> </span><span class="dv">2</span>)
-knitr::<span class="kw">kable</span>(warm,<span class="dt">format =</span> <span class="st">&quot;markdown&quot;</span>, <span class="dt">align=</span><span class="st">&quot;l&quot;</span>)</code></pre>
+knitr::<span class="kw">kable</span>(<span class="kw">head</span>(warm),<span class="dt">format =</span> <span class="st">&quot;markdown&quot;</span>, <span class="dt">align=</span><span class="st">&quot;l&quot;</span>)</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -247,312 +246,56 @@ knitr::<span class="kw">kable</span>(warm,<span class="dt">format =</span> <span
 <td align="left">1</td>
 </tr>
 <tr class="even">
-<td align="left">19020078103142</td>
-<td align="left">唐一文</td>
-<td align="left">1</td>
-</tr>
-<tr class="odd">
 <td align="left">19820082203236</td>
 <td align="left">陈丹</td>
 <td align="left">1</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">19820082203296</td>
 <td align="left">曾泽英</td>
 <td align="left">1</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">19920082203609</td>
 <td align="left">马丽娜</td>
 <td align="left">1</td>
 </tr>
-<tr class="even">
-<td align="left">25320078101521</td>
-<td align="left">薛秀凤</td>
-<td align="left">1</td>
-</tr>
-<tr class="odd">
-<td align="left">25320078101568</td>
-<td align="left">于玺</td>
-<td align="left">1</td>
-</tr>
-<tr class="even">
-<td align="left">27720101154473</td>
-<td align="left">SEYDOU OUMAROU</td>
-<td align="left">1</td>
-</tr>
-<tr class="odd">
-<td align="left">30220078100900</td>
-<td align="left">潘蕾</td>
-<td align="left">1</td>
-</tr>
-<tr class="even">
-<td align="left">30220101159360</td>
-<td align="left">Oktay Cuci</td>
-<td align="left">1</td>
-</tr>
-<tr class="odd">
-<td align="left">31520078104248</td>
-<td align="left">何铭</td>
-<td align="left">1</td>
-</tr>
-<tr class="even">
-<td align="left">31520082204066</td>
-<td align="left">曾朝宾</td>
-<td align="left">1</td>
-</tr>
-<tr class="odd">
-<td align="left">15220081153711</td>
-<td align="left">BENJAMIN NELSON</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">15220081153732</td>
-<td align="left">Toka Sello</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">15220081153733</td>
-<td align="left">Molise Sethobane</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">15320078102319</td>
-<td align="left">郑巍巍</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">17520078100661</td>
-<td align="left">叶冉</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">17620078100826</td>
-<td align="left">施波浪</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">19020082202865</td>
-<td align="left">方宇翔</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">19020082202875</td>
-<td align="left">洪雅强</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">19820078103793</td>
-<td align="left">任含姣</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">19920082203614</td>
-<td align="left">王丹</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">22320082201006</td>
-<td align="left">陈默</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">23220082200980</td>
-<td align="left">徐梅玲</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">23220082204075</td>
-<td align="left">白璐</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720060153434</td>
-<td align="left">周波</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720070153885</td>
-<td align="left">蔡必卿</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720070153886</td>
-<td align="left">杜亚军</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720070153889</td>
-<td align="left">李海奇</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720070153890</td>
-<td align="left">刘长江</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720070153892</td>
-<td align="left">毛尚熠</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720070153894</td>
-<td align="left">王亚峰</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720070153895</td>
-<td align="left">王占海</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720070153896</td>
-<td align="left">吴相波</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720070153898</td>
-<td align="left">张进峰</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720070153899</td>
-<td align="left">张玉鹏</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152872</td>
-<td align="left">白春华</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081152873</td>
-<td align="left">陈中梁</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152876</td>
-<td align="left">蔡毅超</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081152879</td>
-<td align="left">范睿</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152882</td>
-<td align="left">孔德旺</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081152884</td>
-<td align="left">李学梅</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152886</td>
-<td align="left">林鹏</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081152887</td>
-<td align="left">马颖</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152889</td>
-<td align="left">谭丽佳</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081152891</td>
-<td align="left">王宝华</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152893</td>
-<td align="left">王倩</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081152894</td>
-<td align="left">王艺红</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152896</td>
-<td align="left">魏虹丽</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081152897</td>
-<td align="left">吴璐萍</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152898</td>
-<td align="left">谢洁</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081152899</td>
-<td align="left">熊聪</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152901</td>
-<td align="left">张敏涛</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081152904</td>
-<td align="left">周文婧</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081152910</td>
-<td align="left">朱怡瑞</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081153766</td>
-<td align="left">Jung Lim Koo</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720081153767</td>
-<td align="left">Byung Lim Koo</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720081153768</td>
-<td align="left">Presley Wesseh</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720091154030</td>
-<td align="left">Abiy Hailemariam</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">27720101154455</td>
-<td align="left">WEI BEN CHEN</td>
-<td align="left">0</td>
-</tr>
-<tr class="odd">
-<td align="left">27720101154458</td>
-<td align="left">Carl Zhan</td>
-<td align="left">0</td>
-</tr>
-<tr class="even">
-<td align="left">30920078102595</td>
-<td align="left">蔡伟麟</td>
-<td align="left">0</td>
-</tr>
 </tbody>
 </table>
+</div>
+<div id="liu-xi" class="section level2">
+<h2>与Liu Xi的结果对比</h2>
+<p>按照Xi Liu的方法计算有效次数。</p>
+<pre class="sourceCode r"><code class="sourceCode r">times2 &lt;-<span class="st"> </span><span class="kw">adply</span>(logi, <span class="dv">1</span>, function(x){
+    a &lt;-<span class="st"> </span><span class="kw">which</span>(x==<span class="ot">TRUE</span>)
+    tms &lt;-<span class="st"> </span><span class="kw">ifelse</span>(<span class="kw">all</span>(<span class="kw">diff</span>(a)&gt;<span class="dv">1</span>)|<span class="kw">length</span>(a)==<span class="dv">1</span>,<span class="kw">length</span>(a),<span class="kw">length</span>(a)-<span class="kw">ceiling</span>(<span class="kw">length</span>(<span class="kw">which</span>(<span class="kw">diff</span>(a)==<span class="dv">1</span>))/<span class="dv">2</span>)) 
+    <span class="kw">ifelse</span>(<span class="kw">is.na</span>(tms), <span class="dv">0</span>, tms)
+})</code></pre>
+<p>汇总结果。</p>
+<pre class="sourceCode r"><code class="sourceCode r">count2 &lt;-<span class="st"> </span>times2[,<span class="dv">2</span>]
+
+results_xi &lt;-dat[,-tcli] %&gt;&gt;%
+<span class="st">    </span><span class="kw">cbind</span>(count2) %&gt;&gt;%
+<span class="st">    </span><span class="kw">ddply</span>(.(id, name), function(df) <span class="kw">sum</span>(df$count))%&gt;&gt;%
+<span class="st">    </span>dplyr::<span class="kw">rename</span>(<span class="dt">times=</span>V1) %&gt;&gt;%
+<span class="st">    </span><span class="kw">arrange</span>(<span class="kw">desc</span>(times))</code></pre>
+<p>进行比较。</p>
+<pre class="sourceCode r"><code class="sourceCode r">cmpars &lt;-<span class="st"> </span><span class="kw">merge</span>(results, results_xi, <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&quot;name&quot;</span>, <span class="st">&quot;id&quot;</span>))
+<span class="kw">names</span>(cmpars)[<span class="dv">3</span>:<span class="dv">4</span>] &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;sun&quot;</span>, <span class="st">&quot;xi&quot;</span>)
+<span class="kw">head</span>(cmpars)</code></pre>
+<pre><code>##               name             id sun xi
+## 1             李蛟 17620082200757   1  1
+## 2 Abiy Hailemariam 27720091154030   0  0
+## 3  BENJAMIN NELSON 15220081153711   0  0
+## 4    Benny Pandowo 27720091154050   3  3
+## 5    Byung Lim Koo 27720081153767   0  0
+## 6        Carl Zhan 27720101154458   0  0</code></pre>
+<p>两者之间结果不一致的情况次数。</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sum</span>(!((cmpars$sun-cmpars$xi)==<span class="dv">0</span>))</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>Wow!!! 0!!!!</p>
+<p>所以大多数情况下，两种方法等价。Wonderful!</p>
+<hr />
 </div>
 <div class="section level2">
 <h2>结语</h2>
